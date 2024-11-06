@@ -2,251 +2,348 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Bell, Check, ExternalLink, Share2, Trophy, Twitter, Users } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { toast, useToast } from "@/components/ui/use-toast"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Home, Trophy, Users, ListChecks, ArrowRight, Check, ChevronLeft, MoreVertical, Wallet, MapPin } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 type Task = {
-  id: number;
-  description: string;
-  reward: number;
-  completed: boolean;
-  link: string;
-  type: 'twitter' | 'telegram';
+  id: number
+  title: string
+  reward: number
+  completed: boolean
+  icon: string
+  type: 'in-game' | 'partners'
 }
 
 type LeaderboardEntry = {
-  username: string;
-  points: number;
+  username: string
+  points: number
+  rank?: number
+  medal?: boolean
+  avatar?: string
 }
 
 type Friend = {
-  username: string;
-  joinedAt: string;
+  username: string
+  joinedAt: string
+  points: number
 }
 
-export default function BullHouse() {
-  // Simulating automatic login with Telegram username
-  const [username, setUsername] = useState("telegram_user123")
-  const [points, setPoints] = useState(0)
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, description: "Follow @cryptobull on Twitter", reward: 50, completed: false, link: "https://twitter.com/cryptobull", type: 'twitter' },
-    { id: 2, description: "Join Telegram channel @bullhouse", reward: 30, completed: false, link: "https://t.me/bullhouse", type: 'telegram' },
-    { id: 3, description: "Like and retweet pinned post on @cryptobull", reward: 20, completed: false, link: "https://twitter.com/cryptobull", type: 'twitter' },
+export default function ClawsTelegramApp() {
+  const [activeTab, setActiveTab] = useState('home')
+  const [taskType, setTaskType] = useState('in-game')
+  const [walletConnected, setWalletConnected] = useState(false)
+  const [clawsBalance, setClawsBalance] = useState(0)
+  const [showMap, setShowMap] = useState(false)
+  const [telegramAge, setTelegramAge] = useState(0)
+  const [mapBonus, setMapBonus] = useState(0)
+
+  const [tasks] = useState<Task[]>([
+    { id: 1, title: "Complete daily mission", reward: 250, completed: true, icon: "🎯", type: 'in-game' },
+    { id: 2, title: "Add CLAWS to bio", reward: 5000, completed: false, icon: "🐾", type: 'in-game' },
+    { id: 3, title: "Share CLAWS bot", reward: 2000, completed: false, icon: "🤖", type: 'in-game' },
+    { id: 4, title: "Join CLAWS channel", reward: 2500, completed: false, icon: "📢", type: 'partners' },
+    { id: 5, title: "Follow CLAWS group", reward: 1000, completed: true, icon: "👥", type: 'partners' },
   ])
-  const [newTaskAvailable, setNewTaskAvailable] = useState(false)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([
-    { username: "crypto_king", points: 500 },
-    { username: "bull_master", points: 450 },
-    { username: "token_trader", points: 400 },
+
+  const [leaderboard] = useState<LeaderboardEntry[]>([
+    { username: "crypto_king", points: 61086519, medal: true },
+    { username: "ton_master", points: 55670401, medal: true },
+    { username: "claws_lover", points: 48070230, medal: true },
+    { username: "telegram_pro", points: 47471226, rank: 4 },
+    { username: "blockchain_fan", points: 20134, rank: 3100794 },
   ])
-  const [friends, setFriends] = useState<Friend[]>([
-    { username: "alice_crypto", joinedAt: "2023-05-15" },
-    { username: "bob_blockchain", joinedAt: "2023-05-16" },
+
+  const [friends] = useState<Friend[]>([
+    { username: "alice_crypto", joinedAt: "November 06 at 22:16", points: 278 },
+    { username: "bob_blockchain", joinedAt: "November 06 at 22:16", points: 152 },
   ])
-  const { toast } = useToast()
 
   useEffect(() => {
-    // Simulate fetching user data and initializing the bot
-    const initializeBot = async () => {
-      // In a real implementation, you would fetch user data from your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulating API call
-      toast({
-        title: "Welcome to Bull House!",
-        description: `Hello, ${username}! Your account is ready. Start completing tasks to earn rewards!`,
-      })
-    }
+    // Simulating fetching user's Telegram account age
+    const fetchTelegramAge = () => {
+      // In a real app, this would be an API call to get the user's actual Telegram join date
+      const randomAge = Math.floor(Math.random() * 5) + 1; // Random age between 1 and 5 years
+      setTelegramAge(randomAge);
+    };
 
-    initializeBot()
+    fetchTelegramAge();
+  }, []);
 
-    // Simulate new task notification after 5 seconds
-    const timer = setTimeout(() => {
-      setNewTaskAvailable(true)
-      toast({
-        title: "New Task Available!",
-        description: "A new high-reward task has just been added. Check it out!",
-      })
-    }, 5000)
-
-    return () => clearTimeout(timer)
-  }, [username])
-
-  const completeTask = (taskId: number) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, completed: true } : task
-      )
-    )
-    const completedTask = tasks.find(task => task.id === taskId)
-    if (completedTask) {
-      setPoints(prevPoints => prevPoints + completedTask.reward)
-      toast({
-        title: "Task Completed!",
-        description: `You've earned ${completedTask.reward} points for completing the task.`,
-      })
-    }
+  const connectWallet = () => {
+    // Simulating wallet connection
+    setWalletConnected(true)
+    setClawsBalance(20134) // Example balance
   }
 
-  const verifyTask = (taskId: number) => {
-    // In a real implementation, this would involve checking with the respective API
-    // For now, we'll simulate a successful verification
-    setTimeout(() => {
-      completeTask(taskId)
-    }, 1500)
-  }
-
-  const shareReferralLink = () => {
-    // In a real implementation, this would generate a unique referral link
-    const referralLink = `https://bullhouse.com/refer/${username}`
-    navigator.clipboard.writeText(referralLink)
-    toast({
-      title: "Referral Link Copied!",
-      description: "Share this link with your friends to earn bonus points when they join!",
-    })
+  const checkClawsMap = () => {
+    setShowMap(true);
+    const bonus = telegramAge * 1000; // 1000 CLAWS per year of Telegram age
+    setMapBonus(bonus);
+    setClawsBalance(prevBalance => prevBalance + bonus);
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Bull House</CardTitle>
-          <Avatar>
-            <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${username}`} />
-            <AvatarFallback>{username[0]}</AvatarFallback>
-          </Avatar>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-4">
+          <ChevronLeft className="h-6 w-6" />
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold">CLAWS</span>
+            <Badge variant="secondary" className="bg-blue-500">✓</Badge>
+          </div>
         </div>
-        <CardDescription>Welcome, {username}! Complete tasks to earn points.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="tasks">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-            <TabsTrigger value="friends">Friends</TabsTrigger>
-          </TabsList>
-          <TabsContent value="tasks">
-            <div className="space-y-4">
-              {tasks.map(task => (
-                <Card key={task.id}>
-                  <CardHeader>
-                    <CardTitle className="text-sm">{task.description}</CardTitle>
-                    <CardDescription>Reward: {task.reward} points</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex justify-between">
-                    <Button 
-                      onClick={() => window.open(task.link, '_blank')}
-                      variant="outline"
-                    >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      {task.type === 'twitter' ? 'Go to Twitter' : 'Open Telegram'}
-                    </Button>
-                    <Button 
-                      onClick={() => verifyTask(task.id)} 
-                      disabled={task.completed}
-                    >
-                      {task.completed ? (
-                        <>
-                          <Check className="mr-2 h-4 w-4" /> Completed
-                        </>
-                      ) : (
-                        "Verify Completion"
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+        <MoreVertical className="h-6 w-6" />
+      </div>
+
+      {/* Blue Info Bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-l-4 border-blue-500">
+        <span className="text-sm">Check the CLAWS map</span>
+        <Button variant="ghost" size="sm" className="text-blue-500" onClick={checkClawsMap}>
+          <MapPin className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {activeTab === 'home' && (
+        <div className="p-4 space-y-8">
+          {!walletConnected ? (
+            <Button 
+              onClick={connectWallet} 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white h-12 text-lg flex items-center justify-center gap-2"
+            >
+              <Wallet className="h-5 w-5" />
+              Connect TON Wallet
+            </Button>
+          ) : (
+            <div className="bg-gray-900 rounded-lg p-4 text-center">
+              <Wallet className="h-8 w-8 mx-auto mb-2" />
+              <div className="text-2xl font-bold">{clawsBalance.toLocaleString()}</div>
+              <div className="text-sm text-gray-400">CLAWS Balance</div>
             </div>
-          </TabsContent>
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Profile</CardTitle>
-                <CardDescription>Your points and task progress</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span>Total Points:</span>
-                  <Badge variant="secondary" className="text-lg">{points}</Badge>
-                </div>
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span>Task Progress:</span>
-                    <span>{tasks.filter(t => t.completed).length} / {tasks.length}</span>
-                  </div>
-                  <Progress value={(tasks.filter(t => t.completed).length / tasks.length) * 100} />
-                </div>
-                <Button onClick={shareReferralLink} className="w-full">
-                  <Share2 className="mr-2 h-4 w-4" /> Share Referral Link
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="leaderboard">
-            <Card>
-              <CardHeader>
-                <CardTitle>Leaderboard</CardTitle>
-                <CardDescription>Top performers in Bull House</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {leaderboard.map((entry, index) => (
-                    <li key={entry.username} className="flex justify-between items-center">
-                      <span className="flex items-center">
-                        {index === 0 && <Trophy className="mr-2 h-4 w-4 text-yellow-500" />}
-                        {index === 1 && <Trophy className="mr-2 h-4 w-4 text-gray-400" />}
-                        {index === 2 && <Trophy className="mr-2 h-4 w-4 text-amber-600" />}
-                        {entry.username}
-                      </span>
-                      <Badge variant="secondary">{entry.points} pts</Badge>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="friends">
-            <Card>
-              <CardHeader>
-                <CardTitle>Friends</CardTitle>
-                <CardDescription>Your referrals and their join dates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {friends.map((friend) => (
-                    <li key={friend.username} className="flex justify-between items-center">
-                      <span className="flex items-center">
-                        <Users className="mr-2 h-4 w-4" />
-                        {friend.username}
-                      </span>
-                      <span className="text-sm text-muted-foreground">{friend.joinedAt}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button onClick={shareReferralLink} className="w-full mt-4">
-                  <Share2 className="mr-2 h-4 w-4" /> Invite More Friends
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      {newTaskAvailable && (
-        <CardFooter>
-          <Alert>
-            <Bell className="h-4 w-4" />
-            <AlertTitle>New task available!</AlertTitle>
-            <AlertDescription>
-              A new high-reward task has just been added. Check it out!
-            </AlertDescription>
-          </Alert>
-        </CardFooter>
+          )}
+
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="text-6xl">🐾</div>
+            <div className="text-4xl font-bold tracking-tight">
+              {walletConnected ? `${clawsBalance.toLocaleString()} CLAWS` : 'Connect Wallet'}
+            </div>
+            {walletConnected && (
+              <div className="flex items-center gap-2 text-gray-400">
+                LEGEND ⭐ RANK <ArrowRight className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <Button className="w-full bg-gray-900 hover:bg-gray-800 justify-between h-14">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Join CLAWS community
+              </div>
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+
+            <Button className="w-full bg-gray-900 hover:bg-gray-800 justify-between h-14">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Check your rewards
+              </div>
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       )}
-    </Card>
+
+      {activeTab === 'leaderboard' && (
+        <div className="p-4 space-y-6">
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-4xl">🏆</div>
+            <h2 className="text-2xl font-bold">Leaderboard</h2>
+            <div className="text-sm text-gray-400">Total: 25,750,992 users</div>
+          </div>
+
+          <div className="space-y-2">
+            {leaderboard.map((entry, index) => (
+              <Card key={index} className={`bg-gray-900 border-0 ${index === 0 ? 'bg-white text-black' : ''}`}>
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 bg-black">
+                      <AvatarFallback>🐾</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{entry.username}</div>
+                      <div className="text-sm text-gray-400">{entry.points.toLocaleString()} CLAWS</div>
+                    </div>
+                  </div>
+                  <div>
+                    {entry.rank ? `#${entry.rank.toLocaleString()}` : entry.medal ? "🏅" : ""}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'tasks' && (
+        <div className="p-4 space-y-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">TASKS</h1>
+            <p className="text-xl">
+              <span className="text-white">GET REWARDS</span>{" "}
+              <span className="text-gray-500">FOR COMPLETING QUESTS</span>
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={taskType === 'in-game' ? 'default' : 'outline'}
+              className={`flex-1 ${taskType === 'in-game' ? 'bg-white text-black' : 'bg-gray-900 text-white'}`}
+              onClick={() => setTaskType('in-game')}
+            >
+              In-game
+            </Button>
+            <Button
+              variant={taskType === 'partners' ? 'default' : 'outline'}
+              className={`flex-1 ${taskType === 'partners' ? 'bg-white text-black' : 'bg-gray-900 text-white'}`}
+              onClick={() => setTaskType('partners')}
+            >
+              Partners
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {tasks
+              .filter(task => task.type === taskType)
+              .map(task => (
+                <div key={task.id} className="flex items-center justify-between p-4 bg-gray-900 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gray-800 p-2 rounded-lg">{task.icon}</div>
+                    <div>
+                      <div className="font-medium">{task.title}</div>
+                      <div className="text-sm text-gray-400">+ {task.reward.toLocaleString()} CLAWS</div>
+                    </div>
+                  </div>
+                  {task.completed ? (
+                    <Check className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Button size="sm" variant="outline" className="bg-white text-black hover:bg-gray-200">
+                      Start
+                    </Button>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'friends' && (
+        <div className="p-4 space-y-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">INVITE FRIENDS</h1>
+            <p className="text-xl">
+              <span className="text-white">SHARE</span>{" "}
+              <span className="text-gray-500">YOUR INVITATION LINK &</span>{" "}
+              <span className="text-white">GET 10%</span>{" "}
+              <span className="text-gray-500">OF FRIEND'S POINTS</span>
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-400">
+              <span>Total</span>
+              <span>{friends.length} users</span>
+            </div>
+
+            {friends.map((friend, index) => (
+              <Card key={index} className="bg-gray-900 border-0">
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 bg-gray-800">
+                      <AvatarFallback>
+                        <Users className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{friend.username}</div>
+                      <div className="text-sm text-gray-400">{friend.joinedAt}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div>+{friend.points} CLAWS</div>
+                    <div className="text-sm text-green-500">Received</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white h-12 text-lg">
+            Invite
+          </Button>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-900">
+        <div className="flex justify-around p-4">
+          <Button
+            variant="ghost"
+            className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? 'text-blue-500' : 'text-gray-400'}`}
+            onClick={() => setActiveTab('home')}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-xs">Home</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={`flex flex-col items-center gap-1 ${activeTab === 'leaderboard' ? 'text-blue-500' : 'text-gray-400'}`}
+            onClick={() => setActiveTab('leaderboard')}
+          >
+            <Trophy className="h-5 w-5" />
+            <span className="text-xs">Leaderboard</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={`flex flex-col items-center gap-1 ${activeTab === 'friends' ? 'text-blue-500' : 'text-gray-400'}`}
+            onClick={() => setActiveTab('friends')}
+          >
+            <Users className="h-5 w-5" />
+            <span className="text-xs">Friends</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={`flex flex-col items-center gap-1 ${activeTab === 'tasks' ? 'text-blue-500' : 'text-gray-400'}`}
+            onClick={() => setActiveTab('tasks')}
+          >
+            <ListChecks className="h-5 w-5" />
+            <span className="text-xs">Earn</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* CLAWS Map Dialog */}
+      <Dialog open={showMap} onOpenChange={setShowMap}>
+        <DialogContent className="bg-gray-900 text-white">
+          <DialogHeader>
+            <DialogTitle>CLAWS Map</DialogTitle>
+            <DialogDescription>
+              Your Telegram account age: {telegramAge} years
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-lg font-semibold">Congratulations!</p>
+            <p>You've earned a bonus based on your Telegram age:</p>
+            <p className="text-2xl font-bold text-green-500 mt-2">+{mapBonus.toLocaleString()} CLAWS</p>
+          </div>
+          <Button onClick={() => setShowMap(false)} className="w-full bg-blue-500 hover:bg-blue-600">
+            Claim Bonus
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
